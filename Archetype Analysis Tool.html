@@ -1,0 +1,753 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archetype Analyzer</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --complementary-color: #f39c12;
+        }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        h1 {
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .step-indicator span {
+            padding: 10px 20px;
+            margin: 0 5px;
+            border-radius: 20px;
+            background-color: #e0e0e0;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        .step-indicator span.active {
+            background-color: var(--complementary-color);
+            color: white;
+        }
+        .step-description {
+            text-align: center;
+            margin-bottom: 20px;
+            font-style: italic;
+            color: #666;
+        }
+        label, legend {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+        }
+        fieldset {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        .btn-outline:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        #result {
+            display: none;
+        }
+        .archetype-result {
+            margin-bottom: 40px;
+            padding: 20px;
+            border-radius: 6px;
+        }
+        .archetype-result.dominant {
+            background-color: #e8f4fd;
+            border-left: 4px solid var(--primary-color);
+        }
+        .archetype-result.complementary {
+            background-color: #fdf6e8;
+            border-left: 4px solid var(--complementary-color);
+        }
+        .archetype-percentage {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .archetype-result.complementary .archetype-percentage {
+            color: var(--complementary-color);
+        }
+        .recommendations {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+        .recommendations h3 {
+            margin-top: 0;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .summary-grid p {
+            margin: 0;
+        }
+        .edit-link {
+            color: var(--complementary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .edit-link:hover {
+            text-decoration: underline;
+        }
+        .result-section {
+            margin-bottom: 40px;
+        }
+        .validation-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Archetype Analyzer</h1>
+        <div id="validationMessage" class="validation-message"></div>
+        <form id="archetypeForm">
+            <div class="step-indicator">
+                <span class="active">Brand Info</span>
+                <span>Core Values</span>
+                <span>Personality</span>
+                <span>Summary</span>
+            </div>
+            <div id="step1" class="step active">
+                <h2>Step 1: Brand Information</h2>
+                <p class="step-description">Provide basic information about your brand to help us understand its context.</p>
+                <label for="brandName">Brand Name:</label>
+                <input type="text" id="brandName" required>
+                
+                <label for="industry">Industry:</label>
+                <select id="industry" required>
+                    <option value="">Select an industry...</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Healthcare">Healthcare</option>
+                    <option value="Education">Education</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Food and Beverage">Food and Beverage</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Travel and Hospitality">Travel and Hospitality</option>
+                    <option value="Automotive">Automotive</option>
+                    <option value="Real Estate">Real Estate</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Energy">Energy</option>
+                    <option value="Agriculture">Agriculture</option>
+                    <option value="Telecommunications">Telecommunications</option>
+                    <option value="Other">Other</option>
+                </select>
+
+                <div id="otherIndustryContainer" style="display: none;">
+                    <label for="otherIndustry">Please specify your industry:</label>
+                    <input type="text" id="otherIndustry" placeholder="Enter your industry">
+                </div>
+
+                <div class="button-group">
+                    <button type="button" onclick="nextStep(1)" class="btn-primary">Next</button>
+                </div>
+            </div>
+
+            <div id="step2" class="step">
+                <h2>Step 2: Core Values</h2>
+                <p class="step-description">Select up to 5 core values that best represent your brand's essence.</p>
+                <fieldset>
+                    <legend>Choose up to 5 core values:</legend>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="values" value="innovation"> Innovation</label>
+                        <label><input type="checkbox" name="values" value="quality"> Quality</label>
+                        <label><input type="checkbox" name="values" value="integrity"> Integrity</label>
+                        <label><input type="checkbox" name="values" value="sustainability"> Sustainability</label>
+                        <label><input type="checkbox" name="values" value="customer-centric"> Customer-centric</label>
+                        <label><input type="checkbox" name="values" value="diversity"> Diversity</label>
+                        <label><input type="checkbox" name="values" value="creativity"> Creativity</label>
+                        <label><input type="checkbox" name="values" value="reliability"> Reliability</label>
+                        <label><input type="checkbox" name="values" value="transparency"> Transparency</label>
+                        <label><input type="checkbox" name="values" value="excellence"> Excellence</label>
+                        <label><input type="checkbox" name="values" value="empowerment"> Empowerment</label>
+                        <label><input type="checkbox" name="values" value="collaboration"> Collaboration</label>
+                        <label><input type="checkbox" name="values" value="adaptability"> Adaptability</label>
+                        <label><input type="checkbox" name="values" value="social responsibility"> Social Responsibility</label>
+                        <label><input type="checkbox" name="values" value="passion"> Passion</label>
+                    </div>
+                </fieldset>
+                <div class="button-group">
+                    <button type="button" onclick="prevStep(2)" class="btn-outline">Previous</button>
+                    <button type="button" onclick="nextStep(2)" class="btn-primary">Next</button>
+                </div>
+            </div>
+
+            <div id="step3" class="step">
+                <h2>Step 3: Brand Personality</h2>
+                <p class="step-description">Select up to 3 personality traits that best describe your brand's character.</p>
+                <fieldset>
+                    <legend>Choose up to 3 personality traits:</legend>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" name="personality" value="friendly"> Friendly</label>
+                        <label><input type="checkbox" name="personality" value="professional"> Professional</label>
+                        <label><input type="checkbox" name="personality" value="innovative"> Innovative</label>
+                        <label><input type="checkbox" name="personality" value="trustworthy"> Trustworthy</label>
+                        <label><input type="checkbox" name="personality" value="adventurous"> Adventurous</label>
+                        <label><input type="checkbox" name="personality" value="luxurious"> Luxurious</label>
+                        <label><input type="checkbox" name="personality" value="playful"> Playful</label>
+                        <label><input type="checkbox" name="personality" value="caring"> Caring</label>
+                        <label><input type="checkbox" name="personality" value="confident"> Confident</label>
+                        <label><input type="checkbox" name="personality" value="authentic"> Authentic</label>
+                        <label><input type="checkbox" name="personality" value="sophisticated"> Sophisticated</label>
+                        <label><input type="checkbox" name="personality" value="rebellious"> Rebellious</label>
+                    </div>
+                </fieldset>
+                <div class="button-group">
+                    <button type="button" onclick="prevStep(3)" class="btn-outline">Previous</button>
+                    <button type="button" onclick="nextStep(3)" class="btn-primary">Next</button>
+                </div>
+            </div>
+
+            <div id="step4" class="step">
+                <h2>Step 4: Summary</h2>
+                <p class="step-description">Review your selections and submit to determine your brand archetype.</p>
+                <div class="summary-grid">
+                    <p><strong>Brand Name:</strong> <span id="summaryBrandName"></span></p>
+                    <p><strong>Industry:</strong> <span id="summaryIndustry"></span></p>
+                    <p><strong>Core Values:</strong> <span id="summaryValues"></span></p>
+                    <p><strong>Personality Traits:</strong> <span id="summaryPersonality"></span></p>
+                </div>
+                <div class="button-group">
+                    <button type="button" onclick="prevStep(4)" class="btn-outline">Previous</button>
+                    <button type="submit" class="btn-primary">Determine Archetype</button>
+                </div>
+            </div>
+        </form>
+        <div id="result"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Define functions before they are used
+        function nextStep(currentStep) {
+            if (validateStep(currentStep)) {
+                showStep(currentStep + 1);
+            }
+        }
+
+        function prevStep(currentStep) {
+            showStep(currentStep - 1);
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            document.querySelectorAll('.step-indicator span').forEach((s, i) => {
+                s.classList.toggle('active', i + 1 === step);
+            });
+            if (step === 4) {
+                updateSummary();
+            }
+        }
+
+        function validateStep(step) {
+            switch(step) {
+                case 1:
+                    const brandName = document.getElementById('brandName').value.trim();
+                    const industry = document.getElementById('industry').value;
+                    if (!brandName || !industry) {
+          showValidationMessage('Please fill in all fields before proceeding.');
+          return false;
+      }
+      if (industry === 'Other' && !document.getElementById('otherIndustry').value.trim()) {
+          showValidationMessage('Please specify your industry.');
+          return false;
+      }
+      return true;
+    case 2:
+      const values = document.querySelectorAll('input[name="values"]:checked');
+      if (values.length === 0) {
+          showValidationMessage('Please select at least one core value.');
+          return false;
+      }
+      return true;
+    case 3:
+      const personality = document.querySelectorAll('input[name="personality"]:checked');
+      if (personality.length === 0) {
+          showValidationMessage('Please select at least one personality trait.');
+          return false;
+      }
+      return true;
+    default:
+      return true;
+}
+}
+
+function updateSummary() {
+const brandName = document.getElementById('brandName').value;
+let industry = document.getElementById('industry').value;
+if (industry === 'Other') {
+  const otherIndustry = document.getElementById('otherIndustry').value.trim();
+  industry = otherIndustry || 'Other';
+}
+const values = Array.from(document.querySelectorAll('input[name="values"]:checked'))
+  .map(checkbox => checkbox.value);
+const personality = Array.from(document.querySelectorAll('input[name="personality"]:checked'))
+  .map(checkbox => checkbox.value);
+
+document.getElementById('summaryBrandName').textContent = brandName;
+document.getElementById('summaryIndustry').textContent = industry;
+document.getElementById('summaryValues').textContent = values.join(', ');
+document.getElementById('summaryPersonality').textContent = personality.join(', ');
+}
+
+function showValidationMessage(message) {
+const validationMessage = document.getElementById('validationMessage');
+validationMessage.textContent = message;
+validationMessage.style.display = 'block';
+setTimeout(() => {
+  validationMessage.style.display = 'none';
+}, 3000);
+}
+
+const archetypeForm = document.getElementById('archetypeForm');
+if (archetypeForm) {
+archetypeForm.addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const brandName = document.getElementById('brandName').value;
+  let industry = document.getElementById('industry').value;
+  if (industry === 'Other') {
+      const otherIndustry = document.getElementById('otherIndustry').value.trim();
+      industry = otherIndustry || 'Other';
+  }
+  const values = Array.from(document.querySelectorAll('input[name="values"]:checked'))
+      .map(checkbox => checkbox.value);
+  const personality = Array.from(document.querySelectorAll('input[name="personality"]:checked'))
+      .map(checkbox => checkbox.value);
+
+  if (values.length > 5) {
+      showValidationMessage('Please select up to 5 core values.');
+      return;
+  }
+
+  if (personality.length > 3) {
+      showValidationMessage('Please select up to 3 personality traits.');
+      return;
+  }
+
+  const matches = [];
+
+  for (let [archetype, data] of Object.entries(archetypes)) {
+      let score = 0;
+      for (let trait of data.traits) {
+          if (personality.includes(trait.toLowerCase())) {
+              score += 2;
+          }
+      }
+      for (let value of data.values) {
+          if (values.includes(value.toLowerCase())) {
+              score += 1;
+          }
+      }
+      matches.push({archetype, score});
+  }
+
+  matches.sort((a, b) => b.score - a.score);
+  const topTwo = matches.slice(0, 2);
+
+  // Calculate percentages
+  const totalScore = topTwo[0].score + topTwo[1].score;
+  const dominantPercentage = totalScore > 0 ? Math.round((topTwo[0].score / totalScore) * 100) : 100;
+  const complementaryPercentage = 100 - dominantPercentage;
+
+  let resultHTML = `
+      <h2>Results for ${brandName}</h2>
+      <div class="result-section">
+          <div class="summary-grid">
+              <p><strong>Brand Name:</strong> ${brandName}</p>
+              <p><strong>Industry:</strong> ${industry}</p>
+              <p><strong>Core Values:</strong> ${values.join(', ')}</p>
+              <p><strong>Personality Traits:</strong> ${personality.join(', ')}</p>
+          </div>
+      </div>
+  `;
+
+  resultHTML += `
+      <div class="result-section archetype-result dominant">
+          <h3>Dominant Archetype: ${topTwo[0].archetype} <span class="archetype-percentage">(${dominantPercentage}%)</span></h3>
+          <p>This archetype represents ${archetypes[topTwo[0].archetype].traits.join(', ')} qualities.</p>
+          <div class="recommendations">
+              <h3>Recommendations:</h3>
+              <p><strong>Brand Voice:</strong> ${archetypes[topTwo[0].archetype].voice}</p>
+              <p><strong>Messaging:</strong> ${archetypes[topTwo[0].archetype].messaging}</p>
+              <p><strong>Visual Identity:</strong> ${archetypes[topTwo[0].archetype].visuals}</p>
+          </div>
+      </div>
+  `;
+
+  if (complementaryPercentage >= 20) {
+      resultHTML += `
+          <div class="result-section archetype-result complementary">
+              <h3>Complementary Archetype: ${topTwo[1].archetype} <span class="archetype-percentage">(${complementaryPercentage}%)</span></h3>
+              <p>This archetype represents ${archetypes[topTwo[1].archetype].traits.join(', ')} qualities.</p>
+              <div class="recommendations">
+                  <h3>Recommendations:</h3>
+                  <p><strong>Brand Voice:</strong> ${archetypes[topTwo[1].archetype].voice}</p>
+                  <p><strong>Messaging:</strong> ${archetypes[topTwo[1].archetype].messaging}</p>
+                  <p><strong>Visual Identity:</strong> ${archetypes[topTwo[1].archetype].visuals}</p>
+              </div>
+          </div>
+      `;
+
+      resultHTML += `
+          <div class="result-section">
+              <p>Your brand identity should primarily focus on the dominant archetype (${topTwo[0].archetype}) while incorporating elements from the complementary archetype (${topTwo[1].archetype}) to create a unique and well-rounded brand personality.</p>
+          </div>
+      `;
+  } else {
+      resultHTML += `
+          <div class="result-section">
+              <p>Your brand identity aligns strongly with the ${topTwo[0].archetype} archetype. Focus on embodying the qualities and recommendations of this archetype in your branding efforts.</p>
+          </div>
+      `;
+  }
+
+  resultHTML += `
+      <div class="button-group">
+          <button onclick="editEntries()" class="btn-outline">Make Changes</button>
+          <button onclick="downloadPDF()" class="btn-primary">Download as PDF</button>
+      </div>
+  `;
+
+  document.getElementById('result').innerHTML = resultHTML;
+  document.getElementById('archetypeForm').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+});
+}
+
+function editEntries() {
+document.getElementById('result').style.display = 'none';
+document.getElementById('archetypeForm').style.display = 'block';
+showStep(1);
+}
+
+function downloadPDF() {
+const result = document.getElementById('result');
+if (!result || !result.innerHTML.trim()) {
+  alert('Please generate the results before downloading the PDF.');
+  return;
+}
+
+// Check if jsPDF is loaded
+if (typeof window.jspdf === 'undefined') {
+  alert('PDF generation library is not loaded. Please check your internet connection and try again.');
+  return;
+}
+
+// Use a timeout to ensure jsPDF is fully initialized
+setTimeout(() => {
+  try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Try to find the brand name from different possible elements
+      let brandName = 'Brand';
+      const brandNameElement = result.querySelector('h2') || result.querySelector('.summary-grid p:first-child');
+      if (brandNameElement) {
+          const brandNameText = brandNameElement.textContent;
+          const match = brandNameText.match(/Results for (.+)/) || brandNameText.match(/Brand Name:\s*(.+)/);
+          if (match) {
+              brandName = match[1].trim();
+          }
+      }
+      
+      // Set font
+      doc.setFont("helvetica");
+      
+      // Title
+      doc.setFontSize(20);
+      doc.text(`Brand Archetype Results for ${brandName}`, 10, 20);
+      
+      let yPos = 30;
+      
+      // Add summary
+      doc.setFontSize(14);
+      doc.text("Summary", 10, yPos);
+      yPos += 10;
+      
+      doc.setFontSize(10);
+      const summaryItems = result.querySelectorAll('.summary-grid p');
+      summaryItems.forEach((item) => {
+          if (item && item.textContent) {
+              doc.text(item.textContent, 15, yPos);
+              yPos += 7;
+          }
+      });
+      
+      yPos += 10;
+      
+      // Add archetype results
+      const archetypeResults = result.querySelectorAll('.archetype-result');
+      archetypeResults.forEach((archetypeResult, index) => {
+          const titleElement = archetypeResult.querySelector('h3');
+          if (titleElement && titleElement.textContent) {
+              // Draw border with increased padding
+              const borderY = yPos - 10;
+              const borderHeight = 100;  // Increased height for more padding
+              doc.rect(10, borderY, 190, borderHeight);
+              
+              // Archetype title
+              doc.setFontSize(14);
+              doc.text(titleElement.textContent, 15, yPos);
+              yPos += 10;
+          }
+          
+          doc.setFontSize(10);
+          const paragraphs = archetypeResult.querySelectorAll('p');
+          paragraphs.forEach(p => {
+              if (p && p.textContent) {
+                  const lines = doc.splitTextToSize(p.textContent, 180);
+                  doc.text(lines, 15, yPos);
+                  yPos += lines.length * 5 + 5;
+              }
+          });
+          
+          const recommendations = archetypeResult.querySelector('.recommendations');
+          if (recommendations) {
+              doc.setFontSize(12);
+              doc.text('Recommendations:', 15, yPos);
+              yPos += 7;
+              
+              doc.setFontSize(10);
+              recommendations.querySelectorAll('p').forEach(p => {
+                  if (p && p.textContent) {
+                      const lines = doc.splitTextToSize(p.textContent, 180);
+                      doc.text(lines, 15, yPos);
+                      yPos += lines.length * 5 + 5;
+                  }
+              });
+          }
+          
+          yPos += 20;  // Increased space between archetype results
+      });
+      
+      // Add final paragraph
+      const finalParagraphElement = result.querySelector('.result-section:last-child p');
+      if (finalParagraphElement && finalParagraphElement.textContent) {
+          const lines = doc.splitTextToSize(finalParagraphElement.textContent, 180);
+          doc.text(lines, 10, yPos);
+      }
+      
+      doc.save(`${brandName}_Brand_Archetype.pdf`);
+  } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('An error occurred while generating the PDF. Please try again.');
+  }
+}, 100);
+}
+
+function limitCheckboxSelection(checkboxName, limit) {
+const checkboxes = document.querySelectorAll(`input[name="${checkboxName}"]`);
+checkboxes.forEach(checkbox => {
+  checkbox.addEventListener('change', function() {
+      const checkedBoxes = document.querySelectorAll(`input[name="${checkboxName}"]:checked`);
+      if (checkedBoxes.length > limit) {
+          this.checked = false;
+          showValidationMessage(`You can only select up to ${limit} ${checkboxName}.`);
+      }
+  });
+});
+}
+
+limitCheckboxSelection('values', 5);
+limitCheckboxSelection('personality', 3);
+
+const industrySelect = document.getElementById('industry');
+if (industrySelect) {
+industrySelect.addEventListener('change', function() {
+  const otherIndustryContainer = document.getElementById('otherIndustryContainer');
+  if (this.value === 'Other') {
+      otherIndustryContainer.style.display = 'block';
+  } else {
+      otherIndustryContainer.style.display = 'none';
+  }
+});
+}
+
+const archetypes = {
+  'Creator': {
+      traits: ['innovative', 'artistic', 'creative'],
+      values: ['innovation', 'creativity', 'self-expression', 'imagination', 'originality'],
+      voice: 'Imaginative and expressive',
+      messaging: 'Emphasize creativity and self-expression',
+      visuals: 'Use artistic, unique designs and vibrant colors'
+  },
+  'Ruler': {
+      traits: ['confident', 'authoritative', 'influential'],
+      values: ['leadership', 'power', 'control', 'success', 'responsibility'],
+      voice: 'Authoritative and confident',
+      messaging: 'Focus on leadership and control',
+      visuals: 'Use luxurious, high-end designs and rich colors'
+  },
+  'Caregiver': {
+      traits: ['caring', 'compassionate', 'generous'],
+      values: ['empathy', 'nurturing', 'protection', 'service', 'compassion'],
+      voice: 'Warm and supportive',
+      messaging: 'Highlight care and support',
+      visuals: 'Use soft, comforting colors and imagery'
+  },
+  'Innocent': {
+      traits: ['optimistic', 'honest', 'pure'],
+      values: ['simplicity', 'goodness', 'morality', 'nostalgia', 'authenticity'],
+      voice: 'Simple and honest',
+      messaging: 'Emphasize purity and goodness',
+      visuals: 'Use clean, minimalist designs and light colors'
+  },
+  'Sage': {
+      traits: ['knowledgeable', 'analytical', 'wise'],
+      values: ['knowledge', 'truth', 'understanding', 'expertise', 'wisdom'],
+      voice: 'Intelligent and informative',
+      messaging: 'Share knowledge and insights',
+      visuals: 'Use clean, sophisticated designs and cool colors'
+  },
+  'Explorer': {
+      traits: ['adventurous', 'independent', 'daring'],
+      values: ['freedom', 'discovery', 'individuality', 'adventure', 'self-discovery'],
+      voice: 'Exciting and adventurous',
+      messaging: 'Inspire adventure and discovery',
+      visuals: 'Use rugged, outdoor-inspired designs and earthy colors'
+  },
+  'Rebel': {
+      traits: ['rebellious', 'revolutionary', 'disruptive'],
+      values: ['change', 'freedom', 'innovation', 'revolution', 'individuality'],
+      voice: 'Bold and provocative',
+      messaging: 'Challenge the status quo',
+      visuals: 'Use edgy, unconventional designs and bold colors'
+  },
+  'Magician': {
+      traits: ['visionary', 'inspirational', 'charismatic'],
+      values: ['transformation', 'imagination', 'vision', 'spirituality', 'inspiration'],
+      voice: 'Mystical and transformative',
+      messaging: 'Promise transformation and realization of dreams',
+      visuals: 'Use mystical, dreamlike imagery and deep, rich colors'
+  },
+  'Hero': {
+      traits: ['courageous', 'determined', 'honorable'],
+      values: ['courage', 'honor', 'victory', 'strength', 'challenge'],
+      voice: 'Inspiring and bold',
+      messaging: 'Inspire courage and achievement',
+      visuals: 'Use bold, powerful imagery and strong, vibrant colors'
+  },
+  'Everyman': {
+      traits: ['friendly', 'humble', 'authentic'],
+      values: ['belonging', 'community', 'authenticity', 'equality', 'realism'],
+      voice: 'Down-to-earth and relatable',
+      messaging: 'Emphasize common values and inclusivity',
+      visuals: 'Use relatable, everyday imagery and warm, neutral colors'
+  },
+  'Jester': {
+      traits: ['playful', 'humorous', 'spontaneous'],
+      values: ['enjoyment', 'humor', 'fun', 'lightheartedness', 'spontaneity'],
+      voice: 'Playful and humorous',
+      messaging: 'Bring joy and laughter',
+      visuals: 'Use playful, whimsical designs and bright, cheerful colors'
+  },
+  'Lover': {
+      traits: ['passionate', 'sensual', 'intimate'],
+      values: ['intimacy', 'beauty', 'passion', 'relationships', 'pleasure'],
+      voice: 'Passionate and intimate',
+      messaging: 'Celebrate love, beauty, and passion',
+      visuals: 'Use romantic, sensual imagery and warm, rich colors'
+  }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  showStep(1);
+});
+</script>
+</body>
+</html>
